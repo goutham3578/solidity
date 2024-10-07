@@ -9,7 +9,7 @@ const App = () => (
     </div>
     <Services />
     <Transactions />
-    <Footer />
+    {/* <Footer /> */}
   </div>
 );
 export default App;

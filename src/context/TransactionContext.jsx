@@ -35,6 +35,21 @@ export const TransactionProvider = ({ children }) => {
     setFormData((prevState) => ({ ...prevState, [name]: e.target.value }));
   };
 
+  const getAllTransactions = async () => {
+    try {
+      if (!ethereum) return alert("Please install metamask");
+      const transactionContract = getEthereumContract();
+  
+      // console.log("Transaction Contract:", transactionContract);
+      // console.log("ABI Methods:", transactionContract.functions);
+  
+      const availableTransactions = await transactionContract.getAllTransactions();
+      console.log("Available Transactions:", availableTransactions);
+    } catch (error) {
+      console.log("Error:", error);
+    }
+  };
+  
 
   const checkIfWalletIsConnected = async () => {
     try {
@@ -45,7 +60,7 @@ export const TransactionProvider = ({ children }) => {
       const accounts = await ethereum.request({ method: "eth_accounts" });
       if (accounts.length) {
         setcurrentAccount(accounts[0]);
-        //getAllTransactions
+        getAllTransactions();
       } else {
         console.log("No accounts found.");
       }
@@ -54,7 +69,9 @@ export const TransactionProvider = ({ children }) => {
     }
   };
 
-  console.log(currentAccount);
+
+  
+  // console.log(currentAccount);
 
   const connectWallet = async () => {
     try {
@@ -64,6 +81,20 @@ export const TransactionProvider = ({ children }) => {
       setcurrentAccount(accounts[0]); 
   
       getEthereumContract();
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+
+  const checkIfTransactionExist = async () => {
+    try {
+      if (!ethereum) throw new Error("No ethereum object.");
+
+      const transactionContract = getEthereumContract();
+      const transactionCount = await transactionContract.getTransactionCount();
+      console.log(transactionCount)
+      window.localStorage.setItem("transactionCount", transactionCount);
     } catch (error) {
       console.log(error);
     }
@@ -100,13 +131,11 @@ export const TransactionProvider = ({ children }) => {
   
         // Call the smart contract's addToBlockchain function
         const transactionHash = await transactionsContract.addToBlockchain(addressTo, parsedAmount, message, keyword);
-  
         setIsLoading(true);
         console.log(`Loading - ${transactionHash.hash}`);
         await transactionHash.wait();
         console.log(`Success - ${transactionHash.hash}`);
         setIsLoading(false);
-  
         const transactionsCount = await transactionsContract.getTransactionCount();
         setTransactionCount(transactionsCount.toNumber());
   
@@ -123,9 +152,14 @@ export const TransactionProvider = ({ children }) => {
 
 
   useEffect(() => {
-    checkIfWalletIsConnected();
-    getEthereumContract();
-  }, []);
+    const init = async () => {
+      await checkIfWalletIsConnected();
+      if (currentAccount) {
+        await checkIfTransactionExist(); // Only call this after the wallet is connected
+      }
+    };
+    init();
+  }, [currentAccount]);
 
 
 

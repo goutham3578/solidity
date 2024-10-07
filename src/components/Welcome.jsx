@@ -33,14 +33,6 @@ const Welcome = () => {
     
   };
 
-  useEffect(()=>{
-    if (typeof ethereum !== 'undefined') {
-      console.log("etherereun objetc is preset")
-    } else {
-      console.error('Ethereum object not found');
-    }
-  })
-  
 
   return (
     <div className="flex w-full justify-center items-center">
